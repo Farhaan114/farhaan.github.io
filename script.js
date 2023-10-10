@@ -3,6 +3,8 @@ const transcriptDiv = document.getElementById('transcript');
 
 let recognition;
 
+let transcript = ''; // Variable to store the transcript
+
 startRecordingBtn.addEventListener('click', () => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
         alert('Your browser does not support speech recognition');
@@ -14,13 +16,15 @@ startRecordingBtn.addEventListener('click', () => {
         recognition.continuous = true;
 
         recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
+            const interimTranscript = event.results[0][0].transcript;
+            transcript += interimTranscript; // Append the transcript
             transcriptDiv.textContent = transcript;
-            saveTranscriptToFile(transcript);
         };
 
         recognition.onend = () => {
             startRecordingBtn.textContent = 'Start Recording';
+            // Send the transcript to the server
+            sendTranscriptToServer(transcript);
         };
 
         recognition.onerror = (event) => {
@@ -37,14 +41,19 @@ startRecordingBtn.addEventListener('click', () => {
     }
 });
 
-function saveTranscriptToFile(transcript) {
-    const blob = new Blob([transcript], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'transcript.txt';
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
+function sendTranscriptToServer(transcript) {
+    fetch('/save_transcript', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ transcript }),
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            console.log('Transcript sent to server:', data.message);
+        })
+        .catch((error) => {
+            console.error('Error sending transcript to server:', error);
+        });
 }
