@@ -1,4 +1,5 @@
 const startRecordingBtn = document.getElementById('startRecording');
+const stopRecordingBtn = document.getElementById('stopRecording');
 const transcriptDiv = document.getElementById('transcript');
 
 let recognition;
@@ -23,6 +24,7 @@ startRecordingBtn.addEventListener('click', () => {
 
         recognition.onend = () => {
             startRecordingBtn.textContent = 'Start Recording';
+            stopRecordingBtn.style.display = 'none'; // Hide the stop button
             // Send the transcript to the server
             sendTranscriptToServer(transcript);
         };
@@ -34,10 +36,16 @@ startRecordingBtn.addEventListener('click', () => {
 
     if (recognition && recognition.state !== 'listening') {
         recognition.start();
-        startRecordingBtn.textContent = 'Stop Recording';
-    } else if (recognition && recognition.state === 'listening') {
+        startRecordingBtn.textContent = 'Recording...';
+        stopRecordingBtn.style.display = 'inline'; // Show the stop button
+    }
+});
+
+stopRecordingBtn.addEventListener('click', () => {
+    if (recognition && recognition.state === 'listening') {
         recognition.stop();
         startRecordingBtn.textContent = 'Start Recording';
+        stopRecordingBtn.style.display = 'none'; // Hide the stop button
     }
 });
 
